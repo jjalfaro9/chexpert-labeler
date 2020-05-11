@@ -2,7 +2,7 @@
 import pandas as pd
 
 from args import ArgParser
-from loader import Loader
+from loader import Loader, SingleLoader
 from stages import Extractor, Classifier, Aggregator
 from constants import *
 
@@ -21,7 +21,6 @@ def write(reports, labels, output_path, verbose=False):
 
 def label(args):
     """Label the provided report(s)."""
-
     loader = Loader(args.reports_path, args.extract_impression)
 
     extractor = Extractor(args.mention_phrases_dir,
@@ -45,6 +44,33 @@ def label(args):
 
     write(loader.reports, labels, args.output_path, args.verbose)
 
+def get_labels(report):
+    parser = ArgParser()
+    args = parser.parse_args()
+
+    loader = SingleLoader(report)
+
+    extractor = Extractor(args.mention_phrases_dir,
+                          args.unmention_phrases_dir,
+                          verbose=args.verbose)
+    classifier = Classifier(args.pre_negation_uncertainty_path,
+                            args.negation_path,
+                            args.post_negation_uncertainty_path,
+                            verbose=args.verbose)
+    aggregator = Aggregator(CATEGORIES,
+                            verbose=args.verbose)
+
+
+    # Load reports in place.
+    loader.load()
+    # Extract observation mentions in place.
+    extractor.extract(loader.collection)
+    # Classify mentions in place.
+    classifier.classify(loader.collection)
+    # Aggregate mentions to obtain one set of labels for each report.
+    labels = aggregator.aggregate(loader.collection)
+
+    return labels
 
 if __name__ == "__main__":
     parser = ArgParser()

@@ -11,7 +11,7 @@ class ArgParser(object):
 
         # Input report parameters.
         parser.add_argument('--reports_path',
-                            required=True,
+                            default='sample_reports.csv',
                             help='Path to file with radiology reports.')
         parser.add_argument('--extract_impression',
                             action='store_true',

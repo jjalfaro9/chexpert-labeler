@@ -1,4 +1,5 @@
 """Define report loader class."""
+from typing import List, AnyStr
 import re
 import bioc
 import pandas as pd
@@ -83,3 +84,21 @@ class Loader(object):
         clean_report = re.sub(r'\.\s+\.', '.', clean_report)
 
         return clean_report
+
+
+class SingleLoader(Loader):
+    def __init__(self, report: List[AnyStr]):
+        super(SingleLoader, self).__init__("")
+        self.report = report
+
+    def load(self):
+        collection = bioc.BioCCollection()
+        for i, sentence in enumerate(self.report):
+            clean_report = self.clean(sentence)
+            document = text2bioc.text2document(str(i), clean_report)
+            split_document = self.splitter.split_doc(document)
+            assert len(split_document.passages) == 1,\
+                ('Each document must have a single passage, ' +
+                 'the Impression section.')
+            collection.add_document(split_document)
+        self.collection = collection
